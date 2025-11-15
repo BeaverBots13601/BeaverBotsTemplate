@@ -26,14 +26,13 @@ open class UnifiedAutonomousKt : LinearOpMode() {
     protected open val pathToFollow = Path.Standard
     protected open val currentLocation = Locations.Unknown
 
-    private val startPose = Pose2d(24.0, -60.0, -PI / 2)
-
-    private val tel = MultipleTelemetry(super.telemetry, FtcDashboard.getInstance().telemetry)
-    private val roadrunnerDrive by lazy { MecanumDrive(hardwareMap, startPose) }
+    @Suppress("PROPERTY_HIDES_JAVA_FIELD") // intentional
+    private val telemetry = MultipleTelemetry(super.telemetry, FtcDashboard.getInstance().telemetry)
+    private val roadrunnerDrive by lazy { MecanumDrive(hardwareMap, currentLocation.startPose) }
     private val limelight by lazy { LimelightKt.getInstance(hardwareMap, SensorDeviceKt.SensorInitData(
         currentLocation.teamColor,
         FtcDashboard.getInstance().isEnabled,
-    ), tel) ?: throw Exception() }
+    ), telemetry) ?: throw Exception() }
 
     override fun runOpMode() {
         initBulkReads(hardwareMap)
@@ -41,18 +40,18 @@ open class UnifiedAutonomousKt : LinearOpMode() {
 
         // Example autonomous code that can be used. Don't be afraid to expand or remodel it as needed
 
-        if(currentLocation == Locations.Unknown) {
+        /*if(currentLocation == Locations.Unknown) {
             // limelight apriltag
             var tags = limelight.poll()
             var iterations = 0
-            while (tags.isEmpty() && iterations < 500) {
+            while (tags?.isEmpty() ?: false && iterations < 500) {
                 sleep(10)
                 iterations++
                 tags = limelight.poll()
             }
 
             var importantTag: FiducialResult? = null
-            for (tag in tags) {
+            for (tag in tags ?: emptyList()) {
                 if(tag.fiducialId == 12 || tag.fiducialId == 15) importantTag = tag; break
             }
 
@@ -63,46 +62,58 @@ open class UnifiedAutonomousKt : LinearOpMode() {
             } else if(importantTag.fiducialId == 15) {
                 // Do something different with the information
             }
-        }
+        }*/
 
-        val path = roadrunnerDrive.actionBuilder(startPose)
+        val originTAB = roadrunnerDrive.actionBuilder(currentLocation.startPose)
+
+        val path = originTAB
             .strafeTo(Vector2d(-6.0, -30.5))
-            .build()
 
-        tel.addData("INIT STATUS", "READY")
-        tel.update()
+        val path2 = path
+            .strafeToLinearHeading(Vector2d(-12.0, -31.0), PI)
 
-        waitForStart() // setup done actually do things
+        val path3 = path
+            .strafeToLinearHeading(Vector2d(-12.0, -31.0), -PI)
 
-        when(currentLocation) {
+        val action = when(currentLocation) {
             Locations.BlueFar,
             Locations.BlueClose -> {
-                runBlocking(SequentialAction(
-                    path
-                ))
+                SequentialAction(
+                    path.build(),
+                    path2.build(),
+                )
             }
             Locations.RedFar,
             Locations.RedClose -> {
-                runBlocking(SequentialAction(
-                    path
-                ))
+                SequentialAction(
+                    path.build(),
+                    path3.build(),
+                )
             }
-            else -> {}
+            else -> { return }
         }
-        blackboard.put("robotHeading", roadrunnerDrive.localizer.pose.heading.toDouble())
+
+        telemetry.addData("INIT STATUS", "READY")
+        telemetry.update()
+
+        waitForStart() // setup done actually do things
+
+        runBlocking(action)
+
+        blackboard["robotHeading"] = roadrunnerDrive.localizer.pose.heading.toDouble()
     }
 
-    protected enum class Locations(val teamColor: TeamColor) {
-        BlueClose(TeamColor.BLUE),
-        BlueFar(TeamColor.BLUE),
-        RedClose(TeamColor.RED),
-        RedFar(TeamColor.RED),
-        Unknown(TeamColor.UNKNOWN)
+    protected enum class Locations(val teamColor: TeamColor, val startPose: Pose2d) {
+        BlueClose(TeamColor.BLUE, Pose2d(0.0, 0.0, 0.0)),
+        BlueFar(TeamColor.BLUE, Pose2d(0.0, 0.0, 0.0)),
+        RedClose(TeamColor.RED, Pose2d(0.0, 0.0, 0.0)),
+        RedFar(TeamColor.RED, Pose2d(0.0, 0.0, 0.0)),
+        Unknown(TeamColor.UNKNOWN, Pose2d(0.0, 0.0, 0.0))
     }
 
     protected enum class Path {
         Standard,
-        Alternate
+        Alternate,
     }
 }
 
