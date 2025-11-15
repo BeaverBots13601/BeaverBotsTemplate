@@ -20,7 +20,6 @@ import org.firstinspires.ftc.teamcode.sensor.SensorDeviceKt
 import kotlin.reflect.full.companionObjectInstance
 
 /*
-    TODO: Build web-tool that allows robot configuration i.e driver station (ftc-dash)
     TODO: Add a modification to ftc-dash allowing multiple camera sources.
  */
 
@@ -59,6 +58,7 @@ abstract class UnifiedTeleOpKt : LinearOpMode() {
         val classes = HardwareMechanismClassManagerKt.getMechanisms()
         val buttons: HashSet<GamepadButtons> = hashSetOf()
         for (clazz in classes){
+            telemetry.addData(clazz.simpleName + " Loaded", false)
             // Instantiate each
             val mech = (clazz.companionObjectInstance as HardwareMechanismSingletonManager<*>)
                 .getInstance(hardwareMap, initData, telemetry) ?: continue
@@ -71,11 +71,13 @@ abstract class UnifiedTeleOpKt : LinearOpMode() {
             }
             // If all is well, add the mechanism to our list
             mechanisms.add(mech)
+            telemetry.addData(clazz.simpleName + " Loaded", true)
         }
 
         telemetry.update()
 
         waitForStart()
+        telemetry.clear()
         for (mechanism in mechanisms) mechanism.start()
         imu.start()
 
@@ -99,6 +101,7 @@ abstract class UnifiedTeleOpKt : LinearOpMode() {
             for (mechanism in mechanisms) mechanism.run(runData)
 
             telemetry.addData("Time This Loop (ms)", timer.milliseconds())
+            telemetry.addData("Time This Loop (hz)", 1 / timer.seconds())
             telemetry.update()
         }
 
