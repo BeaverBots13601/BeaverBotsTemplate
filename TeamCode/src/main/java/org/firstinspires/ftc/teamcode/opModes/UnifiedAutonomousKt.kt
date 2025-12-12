@@ -6,7 +6,6 @@ import com.acmerobotics.roadrunner.Pose2d
 import com.acmerobotics.roadrunner.SequentialAction
 import com.acmerobotics.roadrunner.Vector2d
 import com.acmerobotics.roadrunner.ftc.runBlocking
-import com.qualcomm.hardware.limelightvision.LLResultTypes.FiducialResult
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
@@ -19,9 +18,6 @@ import kotlin.math.PI
 @Autonomous(name="Automatic Autonomous", group="Competition")
 @Disabled
 open class UnifiedAutonomousKt : LinearOpMode() {
-    //private val propLocation: WebcamPropIdentificationKt.PropLocation
-    //private val propId: WebcamPropIdentificationKt
-
     // Subclass variables
     protected open val pathToFollow = Path.Standard
     protected open val currentLocation = Locations.Unknown
@@ -117,22 +113,22 @@ open class UnifiedAutonomousKt : LinearOpMode() {
     }
 }
 
-@Autonomous(name = "Blue Close Autonomous", group = "Competition")
+@Autonomous(name = "Blue Close Autonomous", group = "Competition", preselectTeleOp = "Blue TeleOp Controls (Robot)")
 class BlueCloseAutonomousKt : UnifiedAutonomousKt() {
     override val currentLocation = Locations.BlueClose
 }
 
-@Autonomous(name = "Blue Far Autonomous", group = "Competition")
+@Autonomous(name = "Blue Far Autonomous", group = "Competition", preselectTeleOp = "Blue TeleOp Controls (Robot)")
 class BlueFarAutonomousKt : UnifiedAutonomousKt() {
     override val currentLocation = Locations.BlueFar
 }
 
-@Autonomous(name = "Red Close Autonomous", group = "Competition")
+@Autonomous(name = "Red Close Autonomous", group = "Competition", preselectTeleOp = "Red TeleOp Controls (Robot)")
 class RedCloseAutonomousKt : UnifiedAutonomousKt() {
     override val currentLocation = Locations.RedClose
 }
 
-@Autonomous(name = "Red Far Autonomous", group = "Competition")
+@Autonomous(name = "Red Far Autonomous", group = "Competition", preselectTeleOp = "Red TeleOp Controls (Robot)")
 class RedFarAutonomousKt : UnifiedAutonomousKt() {
     override val currentLocation = Locations.RedFar
 }
