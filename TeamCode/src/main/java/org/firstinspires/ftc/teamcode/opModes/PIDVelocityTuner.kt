@@ -29,13 +29,13 @@ class PIDVelocityTuner : LinearOpMode() {
         var d: Double
         while (opModeIsActive()) {
             if (c) {
-                a.velocity = 1000.0
+                a.setVelocity(1000.0)
                 b.velocity = 1000.0
                 d = 1000.0
 
                 if (gamepad2.circleWasPressed()) c = false
             } else {
-                a.velocity = -1000.0
+                a.setVelocity(-1000.0)
                 b.velocity = -1000.0
                 d = -1000.0
 

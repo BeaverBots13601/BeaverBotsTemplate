@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.misc
 
 import com.acmerobotics.dashboard.config.Config
+import com.acmerobotics.roadrunner.clamp
 import com.qualcomm.robotcore.hardware.DcMotor.RunMode
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.util.ElapsedTime
@@ -16,7 +17,7 @@ class PIDVelocityController(
 ) {
     private var integralSum = 0.0
     private var lastError = 0.0
-    private var pastTargetVelocity = -1.0
+    private var pastTargetVelocity: Double? = -1.0
     private val timer = ElapsedTime()
     private val name = motor.deviceName
 
@@ -27,7 +28,7 @@ class PIDVelocityController(
     /**
      * Update the motor
      */
-    private fun loop(targetVelocity: Double) {
+    private fun loop(targetVelocity: Double?) {
         if (targetVelocity != pastTargetVelocity) {
             timer.reset()
             pastTargetVelocity = targetVelocity
@@ -35,7 +36,7 @@ class PIDVelocityController(
             integralSum = 0.0
         }
 
-        if (targetVelocity == -1.0) {
+        if (targetVelocity == null) {
             motor.power = 0.0
             return
         }
@@ -47,11 +48,13 @@ class PIDVelocityController(
         val derivative = (error - lastError) / timer.seconds() // rate of change of error
 
         @Suppress("RedundantCompanionReference") // Incorrect error
-        val out = if (USE_TUNABLE_VALUES) {
+        var out = if (USE_TUNABLE_VALUES) {
             (Companion.kP * error) + (Companion.kI * integralSum) + (Companion.kD * derivative)
         } else {
             (kP * error) + (kI * integralSum) + (kD * derivative)
         }
+
+        out = clamp(out, -1.0, 1.0)
 
         motor.power = out
 
@@ -66,12 +69,15 @@ class PIDVelocityController(
     }
 
     /**
-     * The current velocity of the motor. Set to -1.0 to disable control and set the velocity to 0.
-     * The control loop is ran when you set the power, so you should set it every loop.
+     * The current velocity of the motor. Set to null to disable control and set the power to 0.
+     * The control loop is ran when you set the velocity, so you should set it every loop.
      */
-    var velocity: Double
+    val velocity: Double
         get() = motor.velocity
-        set(it) = loop(it)
+
+    fun setVelocity(velocity: Double?) {
+        loop(velocity)
+    }
 
     companion object {
         @JvmField
